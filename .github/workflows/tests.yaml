@@ -76,6 +76,9 @@ jobs:
             MYSQL_PASSWORD: 'Q1w2e3r4'
 
         steps:
+            -   name: Wait for MySQL to initialize
+                run: sleep 15
+
             -   name: Checkout
                 uses: actions/checkout@v2
 
