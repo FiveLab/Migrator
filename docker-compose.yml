@@ -1,0 +1,29 @@
+services:
+    php:
+        container_name: fivelab-migrator-php
+        build:
+            dockerfile: ./Dockerfile
+            context: ./
+        volumes:
+            - './:/code'
+        tty: true
+        environment:
+            MYSQL_DSN: mysql:host=mysql;dbname=migrator_db
+            MYSQL_USER: root
+            MYSQL_PASSWORD: Q1w2e3r4
+        networks:
+            - migrator
+
+    mysql:
+        image: mysql:8.0
+        container_name: fivelab-migrator-mysql
+        environment:
+            MYSQL_DATABASE: migrator_db
+            MYSQL_ROOT_PASSWORD: Q1w2e3r4
+        networks:
+            - migrator
+
+networks:
+    migrator:
+        name: fivelab-migrator
+        driver: bridge

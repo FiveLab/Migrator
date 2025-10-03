@@ -1,0 +1,67 @@
+{
+    "name": "fivelab/migrator",
+    "description": "The library for easy implement migration system.",
+    "keywords": ["migration", "migrator"],
+    "type": "library",
+    "license": "MIT",
+
+    "authors": [
+        {
+            "name": "Vitalii Zhuk",
+            "email": "v.zhuk@fivelab.org"
+        },
+        {
+            "name": "FiveLab Team",
+            "email": "dev@fivelab.org",
+            "homepage": "https://fivelab.org"
+        }
+    ],
+
+    "require": {
+        "php": "^8.4"
+    },
+
+    "require-dev": {
+        "ext-pdo": "*",
+        "phpunit/phpunit": "~12.0",
+        "phpmetrics/phpmetrics": "~3.0",
+        "phpstan/phpstan": "~2.1.0",
+        "escapestudios/symfony2-coding-standard": "~3.5",
+        "fivelab/ci-rules": "dev-master",
+        "matthiasnoback/symfony-dependency-injection-test": "~6.1.0",
+        "symfony/console": "~6.4 | ~7.0",
+        "symfony/dependency-injection": "~6.4 | ~7.0",
+        "symfony/config": "~6.4 | ~7.0"
+    },
+
+    "minimum-stability": "RC",
+
+    "suggest": {
+        "ext-pdo": "Implement version reader based on PDO (read from specific table).",
+        "symfony/console": "Use console commands for migrations.",
+        "symfony/dependency-injection": "Integrate library with Symfony projects."
+    },
+
+    "autoload": {
+        "psr-4": {
+            "FiveLab\\Component\\Migrator\\": "src/"
+        }
+    },
+
+    "autoload-dev": {
+        "psr-4": {
+            "FiveLab\\Component\\Migrator\\Tests\\": "tests/"
+        }
+    },
+
+    "config": {
+        "bin-dir": "bin"
+    },
+
+    "extra": {
+        "thanks": {
+            "name": "fivelab/migrator",
+            "url": "https://github.com/FiveLab/Migrator"
+        }
+    }
+}
