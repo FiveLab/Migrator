@@ -71,14 +71,11 @@ jobs:
                     - 3306:3306
 
         env:
-            MYSQL_DSN: mysql:host=127.0.0.1;dbname=migrator
+            MYSQL_DSN: mysql:host=127.0.0.1;dbname=migrations
             MYSQL_USER: migrator
             MYSQL_PASSWORD: 'Q1w2e3r4'
 
         steps:
-            -   name: Wait for MySQL to initialize
-                run: sleep 15
-
             -   name: Checkout
                 uses: actions/checkout@v2
 
