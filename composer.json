@@ -23,6 +23,7 @@
 
     "require-dev": {
         "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
         "phpunit/phpunit": "~12.0",
         "phpmetrics/phpmetrics": "~3.0",
         "phpstan/phpstan": "~2.1.0",
