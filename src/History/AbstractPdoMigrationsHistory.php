@@ -66,7 +66,7 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
             $metadata,
             MigrationExecutedState::Executed,
             new \DateTimeImmutable($row['executed_at']),
-            (float) $row['execute_time'],
+            (float) $row['execution_time'],
             $row['description']
         );
     }
@@ -76,7 +76,7 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
         $this->initialize();
 
         $sql = \sprintf(
-            'INSERT INTO `%s` (`group`, `version`, `fqcn`, `executed_at`, `execute_time`, `description`) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO `%s` (`group`, `version`, `fqcn`, `executed_at`, `execution_time`, `description`) VALUES (?, ?, ?, ?, ?, ?)',
             $this->tableName
         );
 

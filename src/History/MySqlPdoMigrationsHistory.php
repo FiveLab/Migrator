@@ -33,7 +33,7 @@ CREATE TABLE `{$tableName}` (
     `version` VARCHAR(255) NOT NULL,
     `fqcn` VARCHAR(500) NOT NULL,
     `executed_at` DATETIME NOT NULL,
-    `execute_time` DECIMAL(16, 6) NOT NULL,
+    `execution_time` DECIMAL(16, 6) NOT NULL,
     `description` VARCHAR(1000) DEFAULT NULL,
     PRIMARY KEY (`group`, `version`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
