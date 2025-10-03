@@ -64,6 +64,7 @@ jobs:
             mysql:
                 image: mysql:8.0
                 env:
+                    MYSQL_ROOT_PASSWORD: root
                     MYSQL_USER: migrator
                     MYSQL_PASSWORD: 'Q1w2e3r4'
                     MYSQL_DATABASE: migrations
@@ -71,7 +72,7 @@ jobs:
                     - 3306:3306
 
         env:
-            MYSQL_DSN: mysql:host=mysql;dbname=migrations
+            MYSQL_DSN: mysql:host=127.0.0.1;dbname=migrations
             MYSQL_USER: migrator
             MYSQL_PASSWORD: 'Q1w2e3r4'
 
