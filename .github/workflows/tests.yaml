@@ -70,6 +70,11 @@ jobs:
                 ports:
                     - 3306:3306
 
+        env:
+            MYSQL_DSN: mysql:host=127.0.0.1;dbname=migrator
+            MYSQL_USER: migrator
+            MYSQL_PASSWORD: 'Q1w2e3r4'
+
         steps:
             -   name: Checkout
                 uses: actions/checkout@v2
@@ -87,17 +92,9 @@ jobs:
 
             -   name: Run tests
                 run: bin/phpunit
-                env:
-                    MYSQL_DSN: mysql:host=mysql;dbname=migrator
-                    MYSQL_USER: migrator
-                    MYSQL_PASSWORD: 'Q1w2e3r4'
 
             -   name: Install vendors (lowest)
                 run: composer update --prefer-lowest
 
             -   name: Run tests
                 run: bin/phpunit
-                env:
-                    MYSQL_DSN: mysql:host=mysql;dbname=migrator
-                    MYSQL_USER: migrator
-                    MYSQL_PASSWORD: 'Q1w2e3r4'
