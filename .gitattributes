@@ -8,6 +8,7 @@
 
 # Docker
 /Dockerfile export-ignore
+/docker-compose.yml export-ignore
 
 # Common
 /phpstan.neon export-ignore
