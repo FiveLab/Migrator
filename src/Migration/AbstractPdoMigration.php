@@ -13,7 +13,7 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator\Migration;
 
-use FiveLab\Component\Migrator\Exception\PdoMigrationFailedException;
+use FiveLab\Component\Migrator\Exception\MigrationFailedException;
 
 abstract readonly class AbstractPdoMigration extends AbstractMigration
 {
@@ -65,7 +65,7 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
      *
      * @param array{"0": string, 1: array<string|int, string|int|float>} $entry
      *
-     * @throws PdoMigrationFailedException
+     * @throws MigrationFailedException
      */
     private function executeEntry(array $entry): void
     {
@@ -74,7 +74,14 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
         try {
             $stmt->execute($entry[1]);
         } catch (\Throwable $error) {
-            throw new PdoMigrationFailedException($entry[0], $entry[1], $error);
+            $message = \sprintf(
+                'Migration failed - "%s", parameters: %s with message: %s.',
+                $entry[0],
+                \json_encode($entry[1], \JSON_THROW_ON_ERROR),
+                \rtrim($error->getMessage(), '.')
+            );
+
+            throw new MigrationFailedException($message, 0, $error);
         }
     }
 }

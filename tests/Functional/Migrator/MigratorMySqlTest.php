@@ -13,7 +13,7 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator\Tests\Functional\Migrator;
 
-use FiveLab\Component\Migrator\Exception\PdoMigrationFailedException;
+use FiveLab\Component\Migrator\Exception\MigrationFailedException;
 use FiveLab\Component\Migrator\Locator\FilesystemMigrationsLocator;
 use FiveLab\Component\Migrator\MigrateDirection;
 use FiveLab\Component\Migrator\Migrator;
@@ -132,7 +132,7 @@ class MigratorMySqlTest extends TestCase
     {
         $migrator = $this->createMigrator(__DIR__.'/../../Migrations/DataSet03', 'Database');
 
-        $this->expectException(PdoMigrationFailedException::class);
+        $this->expectException(MigrationFailedException::class);
         $this->expectExceptionMessage('Migration failed - "SELECT * FROM not_existing_table WHERE label = :foo", parameters: {"foo":"bar"} with message: SQLSTATE[42S02]: Base table or view not found:');
 
         $migrator->migrate(MigrateDirection::Up, null);
