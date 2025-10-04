@@ -13,6 +13,8 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator\Migration;
 
+use FiveLab\Component\Migrator\Exception\PdoMigrationFailedException;
+
 abstract readonly class AbstractPdoMigration extends AbstractMigration
 {
     /**
@@ -29,9 +31,8 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
     {
         $this->doUp();
 
-        foreach ($this->entries as [$sql, $parameters]) {
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($parameters);
+        foreach ($this->entries as $entry) {
+            $this->executeEntry($entry);
         }
     }
 
@@ -39,9 +40,8 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
     {
         $this->doDown();
 
-        foreach ($this->entries as [$sql, $parameters]) {
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($parameters);
+        foreach ($this->entries as $entry) {
+            $this->executeEntry($entry);
         }
     }
 
@@ -58,5 +58,23 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
     final protected function addSql(string $sql, array $parameters = []): void
     {
         $this->entries->offsetSet(\count($this->entries), [$sql, $parameters]);
+    }
+
+    /**
+     * Execute SQL entry.
+     *
+     * @param array{"0": string, 1: array<string|int, string|int|float>} $entry
+     *
+     * @throws PdoMigrationFailedException
+     */
+    private function executeEntry(array $entry): void
+    {
+        $stmt = $this->pdo->prepare($entry[0]);
+
+        try {
+            $stmt->execute($entry[1]);
+        } catch (\Throwable $error) {
+            throw new PdoMigrationFailedException($entry[0], $entry[1], $error);
+        }
     }
 }

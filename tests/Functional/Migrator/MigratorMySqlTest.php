@@ -13,6 +13,7 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator\Tests\Functional\Migrator;
 
+use FiveLab\Component\Migrator\Exception\PdoMigrationFailedException;
 use FiveLab\Component\Migrator\Locator\FilesystemMigrationsLocator;
 use FiveLab\Component\Migrator\MigrateDirection;
 use FiveLab\Component\Migrator\Migrator;
@@ -33,14 +34,19 @@ class MigratorMySqlTest extends TestCase
     {
         $this->setUpMySql();
 
-        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet02', 'Database');
-
-        $this->migrator = new Migrator($locator, $this->executor);
+        $this->migrator = $this->createMigrator(__DIR__.'/../../Migrations/DataSet02', 'Database');
     }
 
     protected function tearDown(): void
     {
         $this->dropTables();
+    }
+
+    protected function createMigrator(string $path, string $group): Migrator
+    {
+        $locator = new FilesystemMigrationsLocator($path, $group);
+
+        return new Migrator($locator, $this->executor);
     }
 
     #[Test]
@@ -119,5 +125,16 @@ class MigratorMySqlTest extends TestCase
             ['id' => 1, 'label' => 'Bla Bla'],
             ['id' => 2, 'label' => 'Foo Bar'],
         ], $rows);
+    }
+
+    #[Test]
+    public function shouldSuccessWrapPdoException(): void
+    {
+        $migrator = $this->createMigrator(__DIR__.'/../../Migrations/DataSet03', 'Database');
+
+        $this->expectException(PdoMigrationFailedException::class);
+        $this->expectExceptionMessage('Migration failed - "SELECT * FROM not_existing_table WHERE label = :foo", parameters: {"foo":"bar"} with message: SQLSTATE[42S02]: Base table or view not found:');
+
+        $migrator->migrate(MigrateDirection::Up, null);
     }
 }
