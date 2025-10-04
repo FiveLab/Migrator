@@ -22,6 +22,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(name: 'migrations:migrate', description: 'Run migrations.')]
 class MigrateCommand extends Command
@@ -41,23 +42,38 @@ class MigrateCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $migrator = $this->registry->get($input->getArgument('group'));
+        $style = new SymfonyStyle($input, $output);
+
+        $group = $input->getArgument('group');
         $toVersion = $input->getArgument('version');
         $direction = $input->getOption('down') ? MigrateDirection::Down : MigrateDirection::Up;
+
+        $question = sprintf(
+            '<comment>WARNING!</comment> You are about to execute a migration <comment>%s</comment> (<comment>%s</comment>). Are you sure you wish to continue?',
+            $group,
+            $direction->name
+        );
+
+        if ($input->isInteractive() && !$style->confirm($question, false)) {
+            $style->error('Migration canceled.');
+
+            return self::FAILURE;
+        }
+
+        $migrator = $this->registry->get($group);
 
         foreach ($migrator->migrate($direction, $toVersion) as $result) {
             if ($result->state === MigrationExecutedState::Skipped) {
                 $output->writeln(\sprintf(
-                    'Skip migration "%s" (Executed %s).',
-                    $result->metadata->class->name,
-                    $result->executedAt->format('Y-m-d H:i:s')
+                    'Skip migration <comment>%s</comment>.',
+                    $result->metadata->class->name
                 ), OutputInterface::VERBOSITY_DEBUG);
             } else {
                 $output->writeln(\sprintf(
-                    'Executed migration "%s" in %.2f seconds.',
+                    'Executed migration <comment>%s</comment> in %.2f seconds.',
                     $result->metadata->class->name,
                     $result->executeTime
-                ), OutputInterface::VERBOSITY_VERBOSE);
+                ), OutputInterface::VERBOSITY_NORMAL);
             }
         }
 

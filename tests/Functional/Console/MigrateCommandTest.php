@@ -57,7 +57,15 @@ class MigrateCommandTest extends TestCase
         $tester = $this->executeCommand(['group' => 'Database']);
 
         self::assertEquals(0, $tester->getStatusCode());
-        self::assertEquals('', $this->getOutputString($tester->getOutput()));
+
+        $outputLines = \explode(PHP_EOL, $this->getOutputString($tester->getOutput()));
+
+        self::assertCount(4, $outputLines);
+
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version01 in', $outputLines[0]);
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version02 in', $outputLines[1]);
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version03 in', $outputLines[2]);
+        self::assertEquals('', $outputLines[3]);
 
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
@@ -76,7 +84,14 @@ class MigrateCommandTest extends TestCase
         ]);
 
         self::assertEquals(0, $tester->getStatusCode());
-        self::assertEquals('', $this->getOutputString($tester->getOutput()));
+
+        $outputLines = \explode(PHP_EOL, $this->getOutputString($tester->getOutput()));
+
+        self::assertCount(3, $outputLines);
+
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version01 in', $outputLines[0]);
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version02 in', $outputLines[1]);
+        self::assertEquals('', $outputLines[2]);
 
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
@@ -97,7 +112,15 @@ class MigrateCommandTest extends TestCase
 
         self::assertEquals(0, $tester->getStatusCode());
         self::assertEquals(['migration_versions'], $tables);
-        self::assertEquals('', $this->getOutputString($tester->getOutput()));
+
+        $outputLines = \explode(PHP_EOL, $this->getOutputString($tester->getOutput()));
+
+        self::assertCount(4, $outputLines);
+
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version03 in', $outputLines[0]);
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version02 in', $outputLines[1]);
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version01 in', $outputLines[2]);
+        self::assertEquals('', $outputLines[3]);
     }
 
     #[Test]
@@ -108,7 +131,14 @@ class MigrateCommandTest extends TestCase
         $tester = $this->executeCommand(['group' => 'Database', 'version' => '02', '--down' => 1]);
 
         self::assertEquals(0, $tester->getStatusCode());
-        self::assertEquals('', $this->getOutputString($tester->getOutput()));
+
+        $outputLines = \explode(PHP_EOL, $this->getOutputString($tester->getOutput()));
+
+        self::assertCount(3, $outputLines);
+
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version03 in', $outputLines[0]);
+        self::assertStringStartsWith('Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet02\Version02 in', $outputLines[1]);
+        self::assertEquals('', $outputLines[2]);
 
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
@@ -127,11 +157,33 @@ class MigrateCommandTest extends TestCase
         $this->executeCommand(['group' => 'Foo']);
     }
 
-    private function executeCommand(array $args): CommandTester
+    #[Test]
+    public function shouldFailInInteractiveMode(): void
+    {
+        $tester = $this->executeCommand(['group' => 'database'], true);
+
+        self::assertEquals(1, $tester->getStatusCode());
+
+        $output = $this->getOutputString($tester->getOutput());
+
+        $expectedOutput = <<<OUTPUT
+ WARNING! You are about to execute a migration database (Up). Are you sure you wish to continue? (yes/no) [no]:
+ > 
+
+ [ERROR] Migration canceled.
+OUTPUT;
+
+
+        self::assertEquals(\trim($expectedOutput), \trim($output));
+    }
+
+    private function executeCommand(array $args, bool $interactive = false): CommandTester
     {
         $tester = new CommandTester($this->command);
 
-        $tester->execute($args);
+        $tester->execute($args, [
+            'interactive' => $interactive,
+        ]);
 
         return $tester;
     }
