@@ -18,7 +18,7 @@ use FiveLab\Component\Migrator\Exception\MigrationFailedException;
 abstract readonly class AbstractPdoMigration extends AbstractMigration
 {
     /**
-     * @var \ArrayIterator<int, array{"0": "string", "1": array<string, mixed>}>
+     * @var \ArrayIterator<int, array{"0": "string", "1": array<string, mixed>, "2": string}>
      */
     private \ArrayIterator $entries;
 
@@ -57,7 +57,7 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
      */
     final protected function addSql(string $sql, array $parameters = []): void
     {
-        $this->entries->offsetSet(\count($this->entries), [$sql, $parameters]);
+        $this->entries->offsetSet(\count($this->entries), [$sql, $parameters, \get_class($this)]);
     }
 
     /**
@@ -75,13 +75,13 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
             $stmt->execute($entry[1]);
         } catch (\Throwable $error) {
             $message = \sprintf(
-                'Migration failed - "%s", parameters: %s with message: %s.',
+                '"%s", parameters: %s with message: %s.',
                 $entry[0],
                 \json_encode($entry[1], \JSON_THROW_ON_ERROR),
                 \rtrim($error->getMessage(), '.')
             );
 
-            throw new MigrationFailedException($message, 0, $error);
+            throw new MigrationFailedException($entry[2], $message, 0, $error);
         }
     }
 }

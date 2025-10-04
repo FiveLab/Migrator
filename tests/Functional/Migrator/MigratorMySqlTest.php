@@ -133,7 +133,7 @@ class MigratorMySqlTest extends TestCase
         $migrator = $this->createMigrator(__DIR__.'/../../Migrations/DataSet03', 'Database');
 
         $this->expectException(MigrationFailedException::class);
-        $this->expectExceptionMessage('Migration failed - "SELECT * FROM not_existing_table WHERE label = :foo", parameters: {"foo":"bar"} with message: SQLSTATE[42S02]: Base table or view not found:');
+        $this->expectExceptionMessage('Migration failed (FiveLab\Component\Migrator\Tests\Migrations\DataSet03\Version01) - "SELECT * FROM not_existing_table WHERE label = :foo", parameters: {"foo":"bar"} with message: SQLSTATE[42S02]: Base table or view not found:');
 
         $migrator->migrate(MigrateDirection::Up, null);
     }

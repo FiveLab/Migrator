@@ -15,4 +15,14 @@ namespace FiveLab\Component\Migrator\Exception;
 
 class MigrationFailedException extends \Exception
 {
+    public function __construct(public readonly string $fqcn, string $message, int $code = 0, ?\Throwable $previous = null)
+    {
+        $message = \sprintf(
+            'Migration failed (%s) - %s.',
+            $this->fqcn,
+            \rtrim($message, '.')
+        );
+
+        parent::__construct($message, $code, $previous);
+    }
 }
