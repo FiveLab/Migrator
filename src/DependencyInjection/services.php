@@ -11,6 +11,7 @@
 
 declare(strict_types = 1);
 
+use FiveLab\Component\Migrator\Console\ExecuteMigrationCommand;
 use FiveLab\Component\Migrator\Console\MigrateCommand;
 use FiveLab\Component\Migrator\MigratorRegistry;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -25,6 +26,12 @@ return static function (ContainerConfigurator $container): void {
             ])
 
         ->set('migrations.console.migrate', MigrateCommand::class)
+            ->args([
+                service('migrations.migrator_registry'),
+            ])
+            ->tag('console.command')
+
+        ->set('migrations.console.execute_migration', ExecuteMigrationCommand::class)
             ->args([
                 service('migrations.migrator_registry'),
             ])

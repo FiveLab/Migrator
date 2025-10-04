@@ -45,4 +45,21 @@ readonly class Migrator implements MigratorInterface
 
         return $results;
     }
+
+    public function execute(MigrateDirection $direction, string $version): MigrationResult
+    {
+        $locator = $this->locator;
+        $locator = new FilterVersionsLocator($locator, $version, '=');
+
+        $versions = \iterator_to_array($locator->locate($direction));
+
+        if (!\count($versions)) {
+            throw new \RuntimeException(\sprintf(
+                'The version "%s" does not exists.',
+                $version
+            ));
+        }
+
+        return $this->executor->execute($versions[0], $direction);
+    }
 }

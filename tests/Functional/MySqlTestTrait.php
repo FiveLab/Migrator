@@ -15,7 +15,11 @@ namespace FiveLab\Component\Migrator\Tests\Functional;
 
 use FiveLab\Component\Migrator\Factory\PdoMigrationFactory;
 use FiveLab\Component\Migrator\History\MySqlPdoMigrationsHistory;
+use FiveLab\Component\Migrator\Locator\FilesystemMigrationsLocator;
 use FiveLab\Component\Migrator\MigrationExecutor;
+use FiveLab\Component\Migrator\Migrator;
+use FiveLab\Component\Migrator\MigratorRegistry;
+use Symfony\Component\DependencyInjection\Container;
 
 /**
  * @method void markTestSkipped(string $message)
@@ -62,5 +66,17 @@ trait MySqlTestTrait
         $stmt->execute();
 
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    protected function createMigratorRegistry(): MigratorRegistry
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../Migrations/DataSet02', 'Database');
+
+        $migrator = new Migrator($locator, $this->executor);
+
+        $container = new Container();
+        $container->set('Database', $migrator);
+
+        return new MigratorRegistry($container);
     }
 }

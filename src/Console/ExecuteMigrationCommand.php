@@ -19,8 +19,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(name: 'migrations:migrate', description: 'Run migrations.')]
-class MigrateCommand extends Command
+#[AsCommand(name: 'migrations:execute', description: 'Execute specific migration by version.')]
+class ExecuteMigrationCommand extends Command
 {
     use CommandHelperTrait;
 
@@ -31,16 +31,17 @@ class MigrateCommand extends Command
 
     protected function configure(): void
     {
-        $this->configureMigrateInput($this);
+        $this->configureMigrateInput($this, true);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        [$group, $toVersion, $direction] = $this->readInput($input);
+        [$group, $version, $direction] = $this->readInput($input);
 
         $question = \sprintf(
-            '<comment>WARNING!</comment> You are about to run a <comment>%s</comment> migrations (<comment>%s</comment>). Are you sure you wish to continue?',
+            '<comment>WARNING!</comment> You are about to execute a <comment>%s</comment> migration by version <comment>%s</comment> (<comment>%s</comment>). Are you sure you wish to continue?',
             $group,
+            $version,
             $direction->name
         );
 
@@ -50,9 +51,9 @@ class MigrateCommand extends Command
 
         $migrator = $this->registry->get($group);
 
-        foreach ($migrator->migrate($direction, $toVersion) as $result) {
-            $this->outputMigrationResult($output, $result);
-        }
+        $result = $migrator->execute($direction, $version);
+
+        $this->outputMigrationResult($output, $result);
 
         return self::SUCCESS;
     }

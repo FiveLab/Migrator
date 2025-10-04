@@ -5,6 +5,7 @@
         <exclude name="Symfony.Commenting.FunctionComment.Missing"/>
         <exclude name="Symfony.Functions.Arguments.Invalid"/>
         <exclude name="Symfony.Functions.ScopeOrder.Invalid"/>
+        <exclude name="Symfony.NamingConventions.ValidClassName.InvalidAbstractName"/>
     </rule>
 
     <rule ref="../vendor/fivelab/ci-rules/src/PhpCs/FiveLab"/>

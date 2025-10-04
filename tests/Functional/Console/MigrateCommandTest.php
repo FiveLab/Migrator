@@ -15,35 +15,19 @@ namespace FiveLab\Component\Migrator\Tests\Functional\Console;
 
 use FiveLab\Component\Migrator\Console\MigrateCommand;
 use FiveLab\Component\Migrator\Exception\MigratorNotFoundException;
-use FiveLab\Component\Migrator\Locator\FilesystemMigrationsLocator;
-use FiveLab\Component\Migrator\Migrator;
-use FiveLab\Component\Migrator\MigratorRegistry;
-use FiveLab\Component\Migrator\Tests\Functional\MySqlTestTrait;
-use FiveLab\Component\Migrator\Tests\ServiceContainer;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Output\StreamOutput;
-use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Console\Command\Command;
 
-class MigrateCommandTest extends TestCase
+class MigrateCommandTest extends CommandTestCase
 {
-    private MigrateCommand $command;
-
-    use MySqlTestTrait {
-        setUp as protected setUpMySql;
-    }
+    protected ?Command $command;
 
     protected function setUp(): void
     {
         $this->setUpMySql();
 
-        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet02', 'Database');
-
-        $migrator = new Migrator($locator, $this->executor);
-        $registry = new MigratorRegistry(new ServiceContainer(['Database' => $migrator]));
-        $this->command = new MigrateCommand($registry);
+        $this->command = new MigrateCommand($this->createMigratorRegistry());
     }
 
     protected function tearDown(): void
@@ -167,40 +151,12 @@ class MigrateCommandTest extends TestCase
         $output = $this->getOutputString($tester->getOutput());
 
         $expectedOutput = <<<OUTPUT
- WARNING! You are about to execute a migration database (Up). Are you sure you wish to continue? (yes/no) [no]:
+ WARNING! You are about to run a database migrations (Up). Are you sure you wish to continue? (yes/no) [no]:
  > 
 
  [ERROR] Migration canceled.
 OUTPUT;
 
-
         self::assertEquals(\trim($expectedOutput), \trim($output));
-    }
-
-    private function executeCommand(array $args, bool $interactive = false): CommandTester
-    {
-        $tester = new CommandTester($this->command);
-
-        $tester->execute($args, [
-            'interactive' => $interactive,
-        ]);
-
-        return $tester;
-    }
-
-    private function getOutputString(OutputInterface $output): string
-    {
-        if (!$output instanceof StreamOutput) {
-            throw new \InvalidArgumentException(\sprintf(
-                'Only StreamOutput supported for get output, but "%s" given.',
-                \get_class($output)
-            ));
-        }
-
-        $stream = $output->getStream();
-
-        \rewind($stream);
-
-        return \stream_get_contents($stream);
     }
 }

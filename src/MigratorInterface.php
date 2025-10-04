@@ -24,4 +24,14 @@ interface MigratorInterface
      * @return iterable<MigrationResult>
      */
     public function migrate(MigrateDirection $direction, ?string $toVersion): iterable;
+
+    /**
+     * Execute specific migration (up/down).
+     *
+     * @param MigrateDirection $direction
+     * @param string           $version
+     *
+     * @return MigrationResult
+     */
+    public function execute(MigrateDirection $direction, string $version): MigrationResult;
 }

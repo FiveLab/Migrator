@@ -13,6 +13,7 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator\Tests\Unit\DependencyInjection;
 
+use FiveLab\Component\Migrator\Console\ExecuteMigrationCommand;
 use FiveLab\Component\Migrator\Console\MigrateCommand;
 use FiveLab\Component\Migrator\DependencyInjection\MigratorExtension;
 use FiveLab\Component\Migrator\Locator\FilesystemMigrationsLocator;
@@ -100,6 +101,12 @@ class MigratorExtensionTest extends AbstractExtensionTestCase
         ]);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag('migrations.console.migrate', 'console.command');
+
+        $this->assertService('migrations.console.execute_migration', ExecuteMigrationCommand::class, [
+            new Reference('migrations.migrator_registry'),
+        ]);
+
+        $this->assertContainerBuilderHasServiceDefinitionWithTag('migrations.console.execute_migration', 'console.command');
     }
 
     private function assertService(string $id, string $expectedClass, array $arguments): void

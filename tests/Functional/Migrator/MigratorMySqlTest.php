@@ -96,4 +96,28 @@ class MigratorMySqlTest extends TestCase
             ['id' => 2, 'label' => 'Foo Bar'],
         ], $rows);
     }
+
+    #[Test]
+    #[Depends('shouldSuccessUpToSpecificVersion')]
+    public function shouldSuccessExecuteSpecificVersion(): void
+    {
+        $this->migrator->migrate(MigrateDirection::Up, null);
+        $this->migrator->execute(MigrateDirection::Up, '03');
+
+        $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
+
+        self::assertEquals([
+            ['id' => 1, 'label' => 'Bla Bla', 'active' => 1],
+            ['id' => 2, 'label' => 'Foo Bar', 'active' => 1],
+        ], $rows);
+
+        $this->migrator->execute(MigrateDirection::Down, '03');
+
+        $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
+
+        self::assertEquals([
+            ['id' => 1, 'label' => 'Bla Bla'],
+            ['id' => 2, 'label' => 'Foo Bar'],
+        ], $rows);
+    }
 }
