@@ -25,7 +25,8 @@ readonly class Version02 extends AbstractPdoMigration
     protected function doUp(): void
     {
         $this->addSql('INSERT INTO test_1 (id, label) VALUES (?, ?)', [1, 'Bla Bla']);
-        $this->addSql('INSERT INTO test_1 (id, label) VALUES (:id, :label)', ['id' => 2, 'label' => 'Foo Bar']);
+        $this->addSql('INSERT INTO test_1 (id, label, description) VALUES (:id, :label, :description)', ['id' => 2, 'label' => 'Foo Bar', 'description' => 'some description']);
+        $this->addSql('INSERT INTO test_1 (id, label, description) VALUES (:id, :label, :description)', ['id' => 3, 'label' => 'Bar Bar', 'description' => null]);
     }
 
     protected function doDown(): void
