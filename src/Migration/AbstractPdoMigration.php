@@ -53,7 +53,7 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
      * Add SQL
      *
      * @param string                              $sql
-     * @param array<string|int, int|float|string> $parameters
+     * @param array<string|int, int|float|string|null> $parameters
      */
     final protected function addSql(string $sql, array $parameters = []): void
     {
@@ -63,7 +63,7 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
     /**
      * Execute SQL entry.
      *
-     * @param array{"0": string, "1": array<string|int, string|int|float>, "2": string} $entry
+     * @param array{"0": string, "1": array<string|int, string|int|float|null>, "2": string} $entry
      *
      * @throws MigrationFailedException
      */

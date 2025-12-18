@@ -65,8 +65,9 @@ class ExecuteMigrationCommandTest extends CommandTestCase
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
         self::assertEquals([
-            ['id' => 1, 'label' => 'Bla Bla'],
-            ['id' => 2, 'label' => 'Foo Bar'],
+            ['id' => 1, 'label' => 'Bla Bla', 'description' => null],
+            ['id' => 2, 'label' => 'Foo Bar', 'description' => 'some description'],
+            ['id' => 3, 'label' => 'Bar Bar', 'description' => null],
         ], $rows);
     }
 }

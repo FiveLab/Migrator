@@ -26,7 +26,8 @@ readonly class Version01 extends AbstractPdoMigration
     {
         $this->addSql('CREATE TABLE test_1 (
             id INT AUTO_INCREMENT NOT NULL PRIMARY KEY,
-            label VARCHAR(255) NOT NULL
+            label VARCHAR(255) NOT NULL,
+            description VARCHAR(255) DEFAULT NULL
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
     }
 

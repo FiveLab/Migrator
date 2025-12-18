@@ -57,8 +57,9 @@ class MigratorMySqlTest extends TestCase
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
         self::assertEquals([
-            ['id' => 1, 'label' => 'Bla Bla', 'active' => 1],
-            ['id' => 2, 'label' => 'Foo Bar', 'active' => 1],
+            ['id' => 1, 'label' => 'Bla Bla', 'active' => 1, 'description' => null],
+            ['id' => 2, 'label' => 'Foo Bar', 'active' => 1, 'description' => 'some description'],
+            ['id' => 3, 'label' => 'Bar Bar', 'active' => 1, 'description' => null],
         ], $rows);
     }
 
@@ -83,8 +84,9 @@ class MigratorMySqlTest extends TestCase
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
         self::assertEquals([
-            ['id' => 1, 'label' => 'Bla Bla'],
-            ['id' => 2, 'label' => 'Foo Bar'],
+            ['id' => 1, 'label' => 'Bla Bla', 'description' => null],
+            ['id' => 2, 'label' => 'Foo Bar', 'description' => 'some description'],
+            ['id' => 3, 'label' => 'Bar Bar', 'description' => null],
         ], $rows);
     }
 
@@ -98,8 +100,9 @@ class MigratorMySqlTest extends TestCase
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
         self::assertEquals([
-            ['id' => 1, 'label' => 'Bla Bla'],
-            ['id' => 2, 'label' => 'Foo Bar'],
+            ['id' => 1, 'label' => 'Bla Bla', 'description' => null],
+            ['id' => 2, 'label' => 'Foo Bar', 'description' => 'some description'],
+            ['id' => 3, 'label' => 'Bar Bar', 'description' => null],
         ], $rows);
     }
 
@@ -113,8 +116,9 @@ class MigratorMySqlTest extends TestCase
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
         self::assertEquals([
-            ['id' => 1, 'label' => 'Bla Bla', 'active' => 1],
-            ['id' => 2, 'label' => 'Foo Bar', 'active' => 1],
+            ['id' => 1, 'label' => 'Bla Bla', 'active' => 1, 'description' => null],
+            ['id' => 2, 'label' => 'Foo Bar', 'active' => 1, 'description' => 'some description'],
+            ['id' => 3, 'label' => 'Bar Bar', 'active' => 1, 'description' => null],
         ], $rows);
 
         $this->migrator->execute(MigrateDirection::Down, '03');
@@ -122,8 +126,9 @@ class MigratorMySqlTest extends TestCase
         $rows = $this->executeSql('SELECT * FROM test_1 ORDER BY id ASC');
 
         self::assertEquals([
-            ['id' => 1, 'label' => 'Bla Bla'],
-            ['id' => 2, 'label' => 'Foo Bar'],
+            ['id' => 1, 'label' => 'Bla Bla', 'description' => null],
+            ['id' => 2, 'label' => 'Foo Bar', 'description' => 'some description'],
+            ['id' => 3, 'label' => 'Bar Bar', 'description' => null],
         ], $rows);
     }
 
