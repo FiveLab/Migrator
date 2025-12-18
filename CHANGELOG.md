@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v1.0.2
+------
+
+* Add `null` to signature of `FiveLab\Component\Migrator\Migration\AbstractPdoMigration::addSql`
+
 
 v1.0.1
 ------
