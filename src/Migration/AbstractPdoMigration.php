@@ -79,10 +79,15 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
      */
     private function executeEntry(array $entry): void
     {
-        $stmt = $this->pdo->prepare($entry[0]);
-
         try {
-            $stmt->execute($entry[1]);
+            $stmt = $this->pdo->prepare($entry[0]);
+
+            // PDO in the silent or warning error mode returns false instead of throwing.
+            if (false === $stmt || false === $stmt->execute($entry[1])) {
+                $errorInfo = ($stmt ?: $this->pdo)->errorInfo();
+
+                throw new \PDOException(\sprintf('SQLSTATE[%s]: %s', $errorInfo[0], $errorInfo[2]));
+            }
         } catch (\Throwable $error) {
             $message = \sprintf(
                 '"%s", parameters: %s with message: %s.',
