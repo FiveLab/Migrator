@@ -34,7 +34,7 @@ class MigratorRegistryTest extends TestCase
     #[Test]
     public function shouldSuccessGet(): void
     {
-        $migrator = $this->createMock(MigratorInterface::class);
+        $migrator = $this->createStub(MigratorInterface::class);
 
         $this->container->expects($this->once())
             ->method('has')

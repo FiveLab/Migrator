@@ -26,7 +26,7 @@ class PdoMigrationFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->pdo = $this->createMock(\PDO::class);
+        $this->pdo = $this->createStub(\PDO::class);
     }
 
     #[Test]

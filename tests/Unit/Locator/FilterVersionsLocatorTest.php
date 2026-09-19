@@ -48,4 +48,21 @@ class FilterVersionsLocatorTest extends TestCase
 
         self::assertEquals($expected, $result);
     }
+
+    #[Test]
+    #[TestWith([MigrateDirection::Up, '9', '<=', ['1', '9']])]
+    #[TestWith([MigrateDirection::Down, '10', '>=', ['10']])]
+    #[TestWith([MigrateDirection::Down, '9', '>=', ['10', '9']])]
+    #[TestWith([MigrateDirection::Up, '09', '=', ['9']])]
+    public function shouldCompareVersionsAsNumbers(MigrateDirection $direction, string $toVersion, string $mode, array $expected): void
+    {
+        $fsLocator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet05', 'Bla');
+        $locator = new FilterVersionsLocator($fsLocator, $toVersion, $mode);
+
+        $migrations = \iterator_to_array($locator->locate($direction));
+
+        $result = \array_map(static fn(MigrationMetadata $m) => $m->version, $migrations);
+
+        self::assertEquals($expected, $result);
+    }
 }

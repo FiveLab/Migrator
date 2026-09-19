@@ -18,13 +18,13 @@ use FiveLab\Component\Migrator\Exception\MigrationFailedException;
 abstract readonly class AbstractPdoMigration extends AbstractMigration
 {
     /**
-     * @var \ArrayIterator<int, array{"0": "string", "1": array<string, mixed>, "2": string}>
+     * @var \ArrayIterator<int, array{0: string, 1: array<string|int, int|float|string|null>, 2: string}>
      */
     private \ArrayIterator $entries;
 
     public function __construct(private \PDO $pdo)
     {
-        $this->entries = new \ArrayIterator();
+        $this->entries = self::createEntries();
     }
 
     final public function up(): void
@@ -52,12 +52,22 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
     /**
      * Add SQL
      *
-     * @param string                              $sql
+     * @param string                                   $sql
      * @param array<string|int, int|float|string|null> $parameters
      */
     final protected function addSql(string $sql, array $parameters = []): void
     {
         $this->entries->offsetSet(\count($this->entries), [$sql, $parameters, \get_class($this)]);
+    }
+
+    /**
+     * Create empty storage for SQL entries.
+     *
+     * @return \ArrayIterator<int, array{0: string, 1: array<string|int, int|float|string|null>, 2: string}>
+     */
+    private static function createEntries(): \ArrayIterator
+    {
+        return new \ArrayIterator();
     }
 
     /**
@@ -69,10 +79,15 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
      */
     private function executeEntry(array $entry): void
     {
-        $stmt = $this->pdo->prepare($entry[0]);
-
         try {
-            $stmt->execute($entry[1]);
+            $stmt = $this->pdo->prepare($entry[0]);
+
+            // PDO in the silent or warning error mode returns false instead of throwing.
+            if (false === $stmt || false === $stmt->execute($entry[1])) {
+                $errorInfo = ($stmt ?: $this->pdo)->errorInfo();
+
+                throw new \PDOException(\sprintf('SQLSTATE[%s]: %s', $errorInfo[0], $errorInfo[2]));
+            }
         } catch (\Throwable $error) {
             $message = \sprintf(
                 '"%s", parameters: %s with message: %s.',

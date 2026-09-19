@@ -41,4 +41,77 @@ class FilesystemMigrationsLocatorTest extends TestCase
 
         self::assertEquals($expected, $result);
     }
+
+    #[Test]
+    public function shouldSkipFilesWithoutMigrations(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet07', 'Bla');
+
+        $migrations = \iterator_to_array($locator->locate(MigrateDirection::Up));
+
+        $result = \array_map(static fn(MigrationMetadata $m) => $m->class->getName(), $migrations);
+
+        self::assertEquals([
+            'FiveLab\Component\Migrator\Tests\Migrations\DataSet07\Version1',
+            'FiveLab\Component\Migrator\Tests\Migrations\DataSet07\Version2',
+        ], $result);
+    }
+
+    #[Test]
+    public function shouldFailOnMigrationWithInvalidName(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet08', 'Bla');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Invalid migration class "FiveLab\Component\Migrator\Tests\Migrations\DataSet08\Migration20260101".');
+
+        \iterator_to_array($locator->locate(MigrateDirection::Up));
+    }
+
+    #[Test]
+    public function shouldFailIfDirectoryNotExist(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/not-exist', 'Bla');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(\sprintf('The migrations directory "%s/not-exist" does not exist.', __DIR__));
+
+        \iterator_to_array($locator->locate(MigrateDirection::Up));
+    }
+
+    #[Test]
+    public function shouldFailOnDuplicateVersions(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet06', 'Bla');
+
+        try {
+            \iterator_to_array($locator->locate(MigrateDirection::Up));
+        } catch (\RuntimeException $error) {
+            $message = $error->getMessage();
+
+            self::assertStringStartsWith('The migrations in group "Bla" have duplicate versions: "1" (', $message);
+            self::assertStringContainsString('DataSet06\A\Version1 in ', $message);
+            self::assertStringContainsString('DataSet06\B\Version1 in ', $message);
+            self::assertStringContainsString('DataSet06\C\Version01 in ', $message);
+            self::assertStringNotContainsString('Version2', $message);
+
+            return;
+        }
+
+        self::fail('The duplicate versions were not detected.');
+    }
+
+    #[Test]
+    #[TestWith([MigrateDirection::Up, ['1', '9', '10']])]
+    #[TestWith([MigrateDirection::Down, ['10', '9', '1']])]
+    public function shouldLocateInVersionOrderRegardlessOfPaths(MigrateDirection $direction, array $expected): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet05', 'Bla');
+
+        $migrations = \iterator_to_array($locator->locate($direction));
+
+        $result = \array_map(static fn(MigrationMetadata $m) => $m->version, $migrations);
+
+        self::assertEquals($expected, $result);
+    }
 }

@@ -46,6 +46,10 @@ trait MySqlTestTrait
 
     protected function dropTables(): void
     {
+        if (!isset($this->pdo)) {
+            return;
+        }
+
         $tables = $this->getTableNames();
 
         foreach ($tables as $tableName) {

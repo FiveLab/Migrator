@@ -14,6 +14,7 @@ declare(strict_types = 1);
 namespace FiveLab\Component\Migrator;
 
 use FiveLab\Component\Migrator\Exception\MigrationIsAbstractException;
+use FiveLab\Component\Migrator\Exception\NotMigrationClassException;
 use FiveLab\Component\Migrator\Migration\MigrationInterface;
 
 readonly class MigrationMetadata
@@ -33,8 +34,16 @@ readonly class MigrationMetadata
     {
         $content = (string) \file_get_contents($filepath);
 
-        /** @var class-string<MigrationInterface> $className */
-        $className = self::extractNamespace($filepath, $content).'\\'.self::extractClassName($filepath, $content);
+        /** @var class-string<MigrationInterface>|null $className */
+        $className = self::extractClassName($content);
+
+        if (null === $className) {
+            // Trait, interface, enum or plain script. Ignore.
+            throw new NotMigrationClassException(\sprintf(
+                'The file "%s" does not declare a class.',
+                $filepath
+            ));
+        }
 
         require_once $filepath;
 
@@ -48,7 +57,18 @@ readonly class MigrationMetadata
             ));
         }
 
-        if (!$ref->implementsInterface(MigrationInterface::class)) {
+        $isMigration = $ref->implementsInterface(MigrationInterface::class);
+        $isVersionName = (bool) \preg_match('/^Version([0-9]+)$/', $ref->getShortName(), $matches);
+
+        if (!$isMigration && !$isVersionName) {
+            // Helper class near migrations. Ignore.
+            throw new NotMigrationClassException(\sprintf(
+                'The class "%s" is not a migration.',
+                $className
+            ));
+        }
+
+        if (!$isMigration) {
             throw new \RuntimeException(\sprintf(
                 'The migration class "%s" should implement "%s" interface.',
                 $ref->getName(),
@@ -56,7 +76,7 @@ readonly class MigrationMetadata
             ));
         }
 
-        if (!\preg_match('/\\\Version([0-9]+)$/', $ref->getName(), $matches)) {
+        if (!$isVersionName) {
             throw new \RuntimeException(\sprintf(
                 'Invalid migration class "%s". Class name must match App\Migrations\VersionXXXX, where XXXX is a unique version number.',
                 $ref->getName()
@@ -66,27 +86,50 @@ readonly class MigrationMetadata
         return new self($group, $matches[1], $ref);
     }
 
-    private static function extractNamespace(string $filepath, string $phpContent): string
+    private static function extractClassName(string $phpContent): ?string
     {
-        if (!\preg_match('/namespace\s+(.+);/', $phpContent, $matches)) {
-            throw new \RuntimeException(\sprintf(
-                'Can\'t extract namespace from file "%s".',
-                $filepath
-            ));
+        $tokens = \PhpToken::tokenize($phpContent);
+        $namespace = '';
+
+        foreach ($tokens as $index => $token) {
+            if ($token->is(\T_NAMESPACE)) {
+                $name = self::findSignificantToken($tokens, $index, 1);
+                $namespace = $name?->is([\T_NAME_QUALIFIED, \T_STRING]) ? $name->text : '';
+
+                continue;
+            }
+
+            if (!$token->is(\T_CLASS) || self::findSignificantToken($tokens, $index, -1)?->is(\T_DOUBLE_COLON)) {
+                continue;
+            }
+
+            $name = self::findSignificantToken($tokens, $index, 1);
+
+            if ($name?->is(\T_STRING)) {
+                return \ltrim($namespace.'\\'.$name->text, '\\');
+            }
         }
 
-        return $matches[1];
+        return null;
     }
 
-    private static function extractClassName(string $filepath, string $phpContent): string
+    /**
+     * Find the nearest token which is not a whitespace or a comment.
+     *
+     * @param array<int, \PhpToken> $tokens
+     * @param int                   $index
+     * @param int                   $step
+     *
+     * @return \PhpToken|null
+     */
+    private static function findSignificantToken(array $tokens, int $index, int $step): ?\PhpToken
     {
-        if (!\preg_match('/class\s+(\S+)/', $phpContent, $matches)) {
-            throw new \RuntimeException(\sprintf(
-                'Can\'t extract class from file "%s".',
-                $filepath
-            ));
+        for ($index += $step; isset($tokens[$index]); $index += $step) {
+            if (!$tokens[$index]->isIgnorable()) {
+                return $tokens[$index];
+            }
         }
 
-        return $matches[1];
+        return null;
     }
 }
