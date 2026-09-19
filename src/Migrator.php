@@ -28,7 +28,7 @@ readonly class Migrator implements MigratorInterface
     {
         $locator = $this->locator;
 
-        if ($toVersion) {
+        if (null !== $toVersion) {
             $operator = match ($direction) {
                 MigrateDirection::Up   => '<=',
                 MigrateDirection::Down => '>=',

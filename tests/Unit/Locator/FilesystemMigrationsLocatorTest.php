@@ -41,4 +41,18 @@ class FilesystemMigrationsLocatorTest extends TestCase
 
         self::assertEquals($expected, $result);
     }
+
+    #[Test]
+    #[TestWith([MigrateDirection::Up, ['1', '9', '10']])]
+    #[TestWith([MigrateDirection::Down, ['10', '9', '1']])]
+    public function shouldLocateInVersionOrderRegardlessOfPaths(MigrateDirection $direction, array $expected): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet05', 'Bla');
+
+        $migrations = \iterator_to_array($locator->locate($direction));
+
+        $result = \array_map(static fn(MigrationMetadata $m) => $m->version, $migrations);
+
+        self::assertEquals($expected, $result);
+    }
 }

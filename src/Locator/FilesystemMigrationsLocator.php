@@ -36,19 +36,25 @@ readonly class FilesystemMigrationsLocator implements MigrationsLocatorInterface
             $pathnames[] = $file->getPathname();
         }
 
-        $sortFn = match ($direction) {
-            MigrateDirection::Up   => \sort(...),
-            MigrateDirection::Down => \rsort(...),
-        };
+        // Sort paths first to keep a stable order for migrations with equal versions.
+        \sort($pathnames, \SORT_NATURAL);
 
-        ($sortFn)($pathnames, \SORT_NATURAL);
+        $migrations = [];
 
         foreach ($pathnames as $pathname) {
             try {
-                yield MigrationMetadata::fromPhpFile($this->group, $pathname);
+                $migrations[] = MigrationMetadata::fromPhpFile($this->group, $pathname);
             } catch (MigrationIsAbstractException) {
                 continue;
             }
         }
+
+        \usort($migrations, static fn(MigrationMetadata $a, MigrationMetadata $b): int => \strnatcmp($a->version, $b->version));
+
+        if (MigrateDirection::Down === $direction) {
+            $migrations = \array_reverse($migrations);
+        }
+
+        yield from $migrations;
     }
 }
