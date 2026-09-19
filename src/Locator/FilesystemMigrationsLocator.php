@@ -36,7 +36,7 @@ readonly class FilesystemMigrationsLocator implements MigrationsLocatorInterface
             $pathnames[] = $file->getPathname();
         }
 
-        // Sort paths first to keep a stable order for migrations with equal versions.
+        // Sort paths for a stable loading order of files, independent of the filesystem.
         \sort($pathnames, \SORT_NATURAL);
 
         $migrations = [];
@@ -51,10 +51,53 @@ readonly class FilesystemMigrationsLocator implements MigrationsLocatorInterface
 
         \usort($migrations, static fn(MigrationMetadata $a, MigrationMetadata $b): int => \strnatcmp($a->version, $b->version));
 
+        $this->assertUniqueVersions($migrations);
+
         if (MigrateDirection::Down === $direction) {
             $migrations = \array_reverse($migrations);
         }
 
         yield from $migrations;
+    }
+
+    /**
+     * Check that versions are unique, otherwise the history can't distinguish the migrations.
+     *
+     * @param array<int, MigrationMetadata> $migrations Migrations sorted by version.
+     */
+    private function assertUniqueVersions(array $migrations): void
+    {
+        $duplicates = [];
+
+        foreach ($migrations as $index => $metadata) {
+            $previous = $migrations[$index - 1] ?? null;
+
+            if ($previous && 0 === \strnatcmp($previous->version, $metadata->version)) {
+                $duplicates[$previous->version][$previous->class->getName()] = $previous->class->getFileName();
+                $duplicates[$previous->version][$metadata->class->getName()] = $metadata->class->getFileName();
+            }
+        }
+
+        if (!\count($duplicates)) {
+            return;
+        }
+
+        $messages = [];
+
+        foreach ($duplicates as $version => $classes) {
+            $entries = [];
+
+            foreach ($classes as $className => $fileName) {
+                $entries[] = \sprintf('%s in %s', $className, $fileName);
+            }
+
+            $messages[] = \sprintf('"%s" (%s)', $version, \implode(', ', $entries));
+        }
+
+        throw new \RuntimeException(\sprintf(
+            'The migrations in group "%s" have duplicate versions: %s.',
+            $this->group,
+            \implode('; ', $messages)
+        ));
     }
 }

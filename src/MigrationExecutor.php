@@ -28,7 +28,7 @@ readonly class MigrationExecutor implements MigrationExecutorInterface
         if (MigrateDirection::Up === $direction && $this->history->isExecuted($metadata)) {
             $result = $this->history->get($metadata);
 
-            return new MigrationResult($result->metadata, MigrationExecutedState::Skipped, $result->executedAt, $result->executeTime, $result->description);
+            return new MigrationResult($metadata, MigrationExecutedState::Skipped, $result->executedAt, $result->executeTime, $result->description);
         }
 
         if (MigrateDirection::Down === $direction && !$this->history->isExecuted($metadata)) {

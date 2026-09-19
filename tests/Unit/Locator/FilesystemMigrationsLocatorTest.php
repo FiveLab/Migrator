@@ -43,6 +43,28 @@ class FilesystemMigrationsLocatorTest extends TestCase
     }
 
     #[Test]
+    public function shouldFailOnDuplicateVersions(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet06', 'Bla');
+
+        try {
+            \iterator_to_array($locator->locate(MigrateDirection::Up));
+        } catch (\RuntimeException $error) {
+            $message = $error->getMessage();
+
+            self::assertStringStartsWith('The migrations in group "Bla" have duplicate versions: "1" (', $message);
+            self::assertStringContainsString('DataSet06\A\Version1 in ', $message);
+            self::assertStringContainsString('DataSet06\B\Version1 in ', $message);
+            self::assertStringContainsString('DataSet06\C\Version01 in ', $message);
+            self::assertStringNotContainsString('Version2', $message);
+
+            return;
+        }
+
+        self::fail('The duplicate versions were not detected.');
+    }
+
+    #[Test]
     #[TestWith([MigrateDirection::Up, ['1', '9', '10']])]
     #[TestWith([MigrateDirection::Down, ['10', '9', '1']])]
     public function shouldLocateInVersionOrderRegardlessOfPaths(MigrateDirection $direction, array $expected): void
