@@ -13,6 +13,7 @@ declare(strict_types = 1);
 
 use FiveLab\Component\Migrator\Console\ExecuteMigrationCommand;
 use FiveLab\Component\Migrator\Console\MigrateCommand;
+use FiveLab\Component\Migrator\Factory\NativeMigrationFactory;
 use FiveLab\Component\Migrator\MigratorRegistry;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -24,6 +25,8 @@ return static function (ContainerConfigurator $container): void {
             ->args([
                 '', // Service locator
             ])
+
+        ->set(NativeMigrationFactory::class)
 
         ->set('migrations.console.migrate', MigrateCommand::class)
             ->args([
