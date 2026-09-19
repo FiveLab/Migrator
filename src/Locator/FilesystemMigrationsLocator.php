@@ -14,6 +14,7 @@ declare(strict_types = 1);
 namespace FiveLab\Component\Migrator\Locator;
 
 use FiveLab\Component\Migrator\Exception\MigrationIsAbstractException;
+use FiveLab\Component\Migrator\Exception\NotMigrationClassException;
 use FiveLab\Component\Migrator\MigrateDirection;
 use FiveLab\Component\Migrator\MigrationMetadata;
 
@@ -25,6 +26,13 @@ readonly class FilesystemMigrationsLocator implements MigrationsLocatorInterface
 
     public function locate(MigrateDirection $direction): iterable
     {
+        if (!\is_dir($this->directory)) {
+            throw new \RuntimeException(\sprintf(
+                'The migrations directory "%s" does not exist.',
+                $this->directory
+            ));
+        }
+
         $iterator = new \RecursiveDirectoryIterator($this->directory);
         $iterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::SELF_FIRST);
         $iterator = new \RegexIterator($iterator, '/^.+\.php$/');
@@ -44,7 +52,7 @@ readonly class FilesystemMigrationsLocator implements MigrationsLocatorInterface
         foreach ($pathnames as $pathname) {
             try {
                 $migrations[] = MigrationMetadata::fromPhpFile($this->group, $pathname);
-            } catch (MigrationIsAbstractException) {
+            } catch (MigrationIsAbstractException | NotMigrationClassException) {
                 continue;
             }
         }

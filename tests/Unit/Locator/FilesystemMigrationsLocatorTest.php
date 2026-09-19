@@ -43,6 +43,43 @@ class FilesystemMigrationsLocatorTest extends TestCase
     }
 
     #[Test]
+    public function shouldSkipFilesWithoutMigrations(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet07', 'Bla');
+
+        $migrations = \iterator_to_array($locator->locate(MigrateDirection::Up));
+
+        $result = \array_map(static fn(MigrationMetadata $m) => $m->class->getName(), $migrations);
+
+        self::assertEquals([
+            'FiveLab\Component\Migrator\Tests\Migrations\DataSet07\Version1',
+            'FiveLab\Component\Migrator\Tests\Migrations\DataSet07\Version2',
+        ], $result);
+    }
+
+    #[Test]
+    public function shouldFailOnMigrationWithInvalidName(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet08', 'Bla');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Invalid migration class "FiveLab\Component\Migrator\Tests\Migrations\DataSet08\Migration20260101".');
+
+        \iterator_to_array($locator->locate(MigrateDirection::Up));
+    }
+
+    #[Test]
+    public function shouldFailIfDirectoryNotExist(): void
+    {
+        $locator = new FilesystemMigrationsLocator(__DIR__.'/not-exist', 'Bla');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage(\sprintf('The migrations directory "%s/not-exist" does not exist.', __DIR__));
+
+        \iterator_to_array($locator->locate(MigrateDirection::Up));
+    }
+
+    #[Test]
     public function shouldFailOnDuplicateVersions(): void
     {
         $locator = new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet06', 'Bla');
