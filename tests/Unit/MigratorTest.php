@@ -59,6 +59,36 @@ class MigratorTest extends TestCase
     }
 
     #[Test]
+    public function shouldCallCallbackRightAfterEachMigration(): void
+    {
+        $locator = $this->createStub(MigrationsLocatorInterface::class);
+        $locator->method('locate')->willReturn([$this->createMetadata('1'), $this->createMetadata('2')]);
+
+        $executor = $this->createStub(MigrationExecutorInterface::class);
+
+        $executor->method('execute')
+            ->willReturnCallback(static function (MigrationMetadata $metadata): MigrationResult {
+                if ('2' === $metadata->version) {
+                    throw new \RuntimeException('Migration failed.');
+                }
+
+                return new MigrationResult($metadata, MigrationExecutedState::Executed, new \DateTimeImmutable(), 0.0, null);
+            });
+
+        $reported = [];
+
+        try {
+            (new Migrator($locator, $executor))->migrate(MigrateDirection::Up, null, static function (MigrationResult $result) use (&$reported): void {
+                $reported[] = $result->metadata->version;
+            });
+        } catch (\RuntimeException $error) {
+            self::assertSame('Migration failed.', $error->getMessage());
+        }
+
+        self::assertSame(['1'], $reported);
+    }
+
+    #[Test]
     public function shouldExecuteMigrationsUnderLock(): void
     {
         $calls = [];

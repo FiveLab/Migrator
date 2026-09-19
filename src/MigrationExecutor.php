@@ -32,9 +32,7 @@ readonly class MigrationExecutor implements MigrationExecutorInterface
         }
 
         if (MigrateDirection::Down === $direction && !$this->history->isExecuted($metadata)) {
-            $description = $metadata instanceof DescribedMigrationInterface ? $metadata->getDescription() : null;
-
-            return new MigrationResult($metadata, MigrationExecutedState::Skipped, new \DateTimeImmutable(), 0, $description);
+            return new MigrationResult($metadata, MigrationExecutedState::Skipped, new \DateTimeImmutable(), 0, null);
         }
 
         $migration = $this->factory->create($metadata);

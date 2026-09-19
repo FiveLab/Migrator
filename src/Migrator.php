@@ -26,7 +26,7 @@ readonly class Migrator implements MigratorInterface
     ) {
     }
 
-    public function migrate(MigrateDirection $direction, ?string $toVersion): iterable
+    public function migrate(MigrateDirection $direction, ?string $toVersion, ?callable $onResult = null): iterable
     {
         $locator = $this->locator;
 
@@ -45,7 +45,12 @@ readonly class Migrator implements MigratorInterface
             $results = [];
 
             foreach ($locator->locate($direction) as $metadata) {
-                $results[] = $this->executor->execute($metadata, $direction);
+                $result = $this->executor->execute($metadata, $direction);
+                $results[] = $result;
+
+                if (null !== $onResult) {
+                    $onResult($result);
+                }
             }
 
             return $results;

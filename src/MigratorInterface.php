@@ -18,12 +18,13 @@ interface MigratorInterface
     /**
      * Migrate to specific version (up/down).
      *
-     * @param MigrateDirection $direction
-     * @param string|null      $toVersion
+     * @param MigrateDirection                       $direction
+     * @param string|null                            $toVersion
+     * @param (callable(MigrationResult): void)|null $onResult  Called right after each migration (e.g. for show progress).
      *
      * @return iterable<MigrationResult>
      */
-    public function migrate(MigrateDirection $direction, ?string $toVersion): iterable;
+    public function migrate(MigrateDirection $direction, ?string $toVersion, ?callable $onResult = null): iterable;
 
     /**
      * Execute specific migration (up/down).

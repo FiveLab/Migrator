@@ -13,6 +13,8 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator\Console;
 
+use FiveLab\Component\Migrator\MigrationExecutedState;
+use FiveLab\Component\Migrator\MigrationResult;
 use FiveLab\Component\Migrator\MigratorRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -49,9 +51,18 @@ class MigrateCommand extends Command
         }
 
         $migrator = $this->registry->get($group);
+        $executed = 0;
 
-        foreach ($migrator->migrate($direction, $toVersion) as $result) {
+        $migrator->migrate($direction, $toVersion, function (MigrationResult $result) use ($output, &$executed): void {
             $this->outputMigrationResult($output, $result);
+
+            if (MigrationExecutedState::Executed === $result->state) {
+                $executed++;
+            }
+        });
+
+        if (!$executed) {
+            $output->writeln('No migrations to execute.');
         }
 
         return self::SUCCESS;
