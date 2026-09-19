@@ -16,13 +16,18 @@ namespace FiveLab\Component\Migrator\Tests\Unit\DependencyInjection;
 use FiveLab\Component\Migrator\Console\ExecuteMigrationCommand;
 use FiveLab\Component\Migrator\Console\MigrateCommand;
 use FiveLab\Component\Migrator\DependencyInjection\MigratorExtension;
+use FiveLab\Component\Migrator\History\MigrationsHistoryInterface;
 use FiveLab\Component\Migrator\Locator\FilesystemMigrationsLocator;
 use FiveLab\Component\Migrator\MigrationExecutor;
 use FiveLab\Component\Migrator\Migrator;
 use FiveLab\Component\Migrator\MigratorRegistry;
 use Matthias\SymfonyDependencyInjectionTest\PhpUnit\AbstractExtensionTestCase;
 use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
+use Symfony\Component\Console\DependencyInjection\AddConsoleCommandPass;
 use Symfony\Component\DependencyInjection\Argument\ServiceLocatorArgument;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 
 class MigratorExtensionTest extends AbstractExtensionTestCase
@@ -107,6 +112,72 @@ class MigratorExtensionTest extends AbstractExtensionTestCase
         ]);
 
         $this->assertContainerBuilderHasServiceDefinitionWithTag('migrations.console.execute_migration', 'console.command');
+    }
+
+    #[Test]
+    public function shouldSuccessCompileWithDefaultFactory(): void
+    {
+        $container = new ContainerBuilder();
+
+        $container->registerExtension(new MigratorExtension());
+        $container->addCompilerPass(new AddConsoleCommandPass());
+        $container->setDefinition('migrator.history', new Definition(MigrationsHistoryInterface::class));
+
+        $container->loadFromExtension('fivelab_migrator', [
+            'migrations' => [
+                'default' => [
+                    'path'    => __DIR__,
+                    'history' => 'migrator.history',
+                ],
+            ],
+        ]);
+
+        $container->compile();
+
+        self::assertTrue($container->isCompiled());
+    }
+
+    #[Test]
+    public function shouldFailOnDuplicateGroups(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('The migrations "mysql" and "clickhouse" have the same group "database". The group must be unique.');
+
+        $this->load([
+            'migrations' => [
+                'mysql' => [
+                    'group'   => 'database',
+                    'path'    => __DIR__,
+                    'history' => 'migrator.history',
+                ],
+
+                'clickhouse' => [
+                    'group'   => 'database',
+                    'path'    => __DIR__,
+                    'history' => 'migrator.history',
+                ],
+            ],
+        ]);
+    }
+
+    #[Test]
+    public function shouldSuccessLoadWithLock(): void
+    {
+        $this->load([
+            'migrations' => [
+                'default' => [
+                    'path'    => __DIR__,
+                    'history' => 'migrator.history',
+                    'lock'    => 'migrator.lock',
+                ],
+            ],
+        ]);
+
+        $this->assertService('migrations.migrator.default', Migrator::class, [
+            new Reference('migrations.migrator.default.locator'),
+            new Reference('migrations.migrator.default.executor'),
+            new Reference('migrator.lock'),
+        ]);
     }
 
     private function assertService(string $id, string $expectedClass, array $arguments): void

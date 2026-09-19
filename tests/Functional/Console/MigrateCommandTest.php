@@ -15,9 +15,16 @@ namespace FiveLab\Component\Migrator\Tests\Functional\Console;
 
 use FiveLab\Component\Migrator\Console\MigrateCommand;
 use FiveLab\Component\Migrator\Exception\MigratorNotFoundException;
+use FiveLab\Component\Migrator\Factory\NativeMigrationFactory;
+use FiveLab\Component\Migrator\Locator\FilesystemMigrationsLocator;
+use FiveLab\Component\Migrator\MigrationExecutor;
+use FiveLab\Component\Migrator\Migrator;
+use FiveLab\Component\Migrator\MigratorRegistry;
 use PHPUnit\Framework\Attributes\Depends;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\DependencyInjection\Container;
 
 class MigrateCommandTest extends CommandTestCase
 {
@@ -33,6 +40,43 @@ class MigrateCommandTest extends CommandTestCase
     protected function tearDown(): void
     {
         $this->dropTables();
+    }
+
+    #[Test]
+    public function shouldOutputIfNoMigrationsToExecute(): void
+    {
+        $this->executeCommand(['group' => 'Database']);
+        $tester = $this->executeCommand(['group' => 'Database']);
+
+        self::assertEquals(0, $tester->getStatusCode());
+        self::assertEquals('No migrations to execute.'.PHP_EOL, $this->getOutputString($tester->getOutput()));
+    }
+
+    #[Test]
+    public function shouldOutputExecutedMigrationsBeforeFailure(): void
+    {
+        $migrator = new Migrator(
+            new FilesystemMigrationsLocator(__DIR__.'/../../Migrations/DataSet09', 'Failed'),
+            new MigrationExecutor($this->history, new NativeMigrationFactory())
+        );
+
+        $container = new Container();
+        $container->set('Failed', $migrator);
+
+        $tester = new CommandTester(new MigrateCommand(new MigratorRegistry($container)));
+
+        try {
+            $tester->execute(['group' => 'Failed'], ['interactive' => false]);
+
+            self::fail('The failed migration was not reported.');
+        } catch (\RuntimeException $error) {
+            self::assertEquals('Something went wrong.', $error->getMessage());
+        }
+
+        self::assertStringStartsWith(
+            'Executed migration FiveLab\Component\Migrator\Tests\Migrations\DataSet09\Version1 in',
+            $this->getOutputString($tester->getOutput())
+        );
     }
 
     #[Test]

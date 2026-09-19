@@ -30,9 +30,9 @@ readonly class FilterVersionsLocator implements MigrationsLocatorInterface
 
         foreach ($generator as $metadata) {
             $accepted = match ($this->mode) {
-                '='     => \strcmp($metadata->version, $this->version) === 0,
-                '>='    => \strcmp($metadata->version, $this->version) >= 0,
-                '<='    => \strcmp($metadata->version, $this->version) <= 0,
+                '='     => \strnatcmp($metadata->version, $this->version) === 0,
+                '>='    => \strnatcmp($metadata->version, $this->version) >= 0,
+                '<='    => \strnatcmp($metadata->version, $this->version) <= 0,
                 default => throw new \InvalidArgumentException(\sprintf(
                     'Invalid compare mode "%s". Possible only "=", ">=" and "<=".',
                     $this->mode

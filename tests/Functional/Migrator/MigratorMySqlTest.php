@@ -142,4 +142,16 @@ class MigratorMySqlTest extends TestCase
 
         $migrator->migrate(MigrateDirection::Up, null);
     }
+
+    #[Test]
+    public function shouldSuccessUpWithAnsiQuotesSqlMode(): void
+    {
+        $this->pdo->exec('SET SESSION sql_mode = CONCAT(@@sql_mode, \',ANSI_QUOTES\')');
+
+        $this->migrator->migrate(MigrateDirection::Up, null);
+
+        $rows = $this->executeSql('SELECT id FROM test_1 ORDER BY id ASC');
+
+        self::assertEquals([['id' => 1], ['id' => 2], ['id' => 3]], $rows);
+    }
 }

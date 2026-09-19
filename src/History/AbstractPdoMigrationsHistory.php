@@ -34,10 +34,7 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
             $this->tableName
         );
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$metadata->group, $metadata->version]);
-
-        return (bool) $stmt->fetchColumn();
+        return (bool) $this->executeSql($sql, [$metadata->group, $metadata->version])->fetchColumn();
     }
 
     final public function get(MigrationMetadata $metadata): MigrationResult
@@ -49,10 +46,7 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
             $this->tableName
         );
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$metadata->group, $metadata->version]);
-
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        $row = $this->executeSql($sql, [$metadata->group, $metadata->version])->fetch(\PDO::FETCH_ASSOC);
 
         if (!$row) {
             throw new \RuntimeException(\sprintf(
@@ -80,9 +74,7 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
             $this->tableName
         );
 
-        $stmt = $this->pdo->prepare($sql);
-
-        $stmt->execute([
+        $this->executeSql($sql, [
             $result->metadata->group,
             $result->metadata->version,
             $result->metadata->class->getName(),
@@ -101,8 +93,7 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
             $this->tableName
         );
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$metadata->group, $metadata->version]);
+        $this->executeSql($sql, [$metadata->group, $metadata->version]);
     }
 
     abstract protected function isMigrationTableExist(string $tableName): bool;
@@ -116,12 +107,30 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
         }
 
         if (!$this->isMigrationTableExist($this->tableName)) {
-            $sql = $this->getCreateTableSql($this->tableName);
-
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute();
+            $this->executeSql($this->getCreateTableSql($this->tableName));
         }
 
         $this->initialized = true;
+    }
+
+    /**
+     * Execute SQL and fail on errors even if PDO is configured not to throw exceptions.
+     *
+     * @param string            $sql
+     * @param array<int, mixed> $parameters
+     *
+     * @return \PDOStatement
+     */
+    private function executeSql(string $sql, array $parameters = []): \PDOStatement
+    {
+        $stmt = $this->pdo->prepare($sql);
+
+        if (false === $stmt || false === $stmt->execute($parameters)) {
+            $errorInfo = ($stmt ?: $this->pdo)->errorInfo();
+
+            throw new \PDOException(\sprintf('SQLSTATE[%s]: %s', $errorInfo[0], $errorInfo[2]));
+        }
+
+        return $stmt;
     }
 }

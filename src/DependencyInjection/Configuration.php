@@ -76,6 +76,11 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('history')
                 ->info('The service id of migration history.')
                 ->isRequired()
+            ->end()
+
+            ->scalarNode('lock')
+                ->info('The service id of lock for prevent parallel execution of migrations.')
+                ->defaultNull()
             ->end();
 
         return $node;
