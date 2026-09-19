@@ -18,13 +18,13 @@ use FiveLab\Component\Migrator\Exception\MigrationFailedException;
 abstract readonly class AbstractPdoMigration extends AbstractMigration
 {
     /**
-     * @var \ArrayIterator<int, array{"0": "string", "1": array<string, mixed>, "2": string}>
+     * @var \ArrayIterator<int, array{0: string, 1: array<string|int, int|float|string|null>, 2: string}>
      */
     private \ArrayIterator $entries;
 
     public function __construct(private \PDO $pdo)
     {
-        $this->entries = new \ArrayIterator();
+        $this->entries = self::createEntries();
     }
 
     final public function up(): void
@@ -58,6 +58,16 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
     final protected function addSql(string $sql, array $parameters = []): void
     {
         $this->entries->offsetSet(\count($this->entries), [$sql, $parameters, \get_class($this)]);
+    }
+
+    /**
+     * Create empty storage for SQL entries.
+     *
+     * @return \ArrayIterator<int, array{0: string, 1: array<string|int, int|float|string|null>, 2: string}>
+     */
+    private static function createEntries(): \ArrayIterator
+    {
+        return new \ArrayIterator();
     }
 
     /**
