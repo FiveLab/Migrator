@@ -52,7 +52,7 @@ abstract readonly class AbstractPdoMigration extends AbstractMigration
     /**
      * Add SQL
      *
-     * @param string                              $sql
+     * @param string                                   $sql
      * @param array<string|int, int|float|string|null> $parameters
      */
     final protected function addSql(string $sql, array $parameters = []): void

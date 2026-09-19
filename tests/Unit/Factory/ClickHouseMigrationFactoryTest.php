@@ -26,7 +26,7 @@ class ClickHouseMigrationFactoryTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->client = $this->createMock(Client::class);
+        $this->client = $this->createStub(Client::class);
     }
 
     #[Test]

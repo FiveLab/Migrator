@@ -58,7 +58,7 @@ abstract class AbstractPdoMigrationsHistory implements MigrationsHistoryInterfac
             throw new \RuntimeException(\sprintf(
                 'The migration "%s" does not exist in history in group "%s".',
                 $metadata->version,
-                $metadata->group ?? 'NULL'
+                $metadata->group
             ));
         }
 
