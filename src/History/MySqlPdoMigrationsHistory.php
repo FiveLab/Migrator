@@ -17,18 +17,17 @@ class MySqlPdoMigrationsHistory extends AbstractPdoMigrationsHistory
 {
     protected function isMigrationTableExist(string $tableName): bool
     {
-        $sql = \sprintf('SHOW TABLES LIKE "%s"', $tableName);
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute();
+        $stmt = $this->pdo->prepare('SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?');
+        $stmt->execute([$tableName]);
 
         return (bool) $stmt->fetchColumn();
     }
 
     protected function getCreateTableSql(string $tableName): string
     {
+        // "IF NOT EXISTS" protects from the race when several processes create the table at the same time.
         return <<<SQL
-CREATE TABLE `{$tableName}` (
+CREATE TABLE IF NOT EXISTS `{$tableName}` (
     `group` VARCHAR(255) NOT NULL,
     `version` VARCHAR(255) NOT NULL,
     `fqcn` VARCHAR(500) NOT NULL,

@@ -13,6 +13,7 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator\Tests\Unit;
 
+use FiveLab\Component\Migrator\Lock\MigrationLockInterface;
 use FiveLab\Component\Migrator\Locator\MigrationsLocatorInterface;
 use FiveLab\Component\Migrator\MigrateDirection;
 use FiveLab\Component\Migrator\MigrationExecutedState;
@@ -55,6 +56,68 @@ class MigratorTest extends TestCase
         $results = \iterator_to_array($migrator->migrate(MigrateDirection::Up, '0'));
 
         self::assertCount(1, $results);
+    }
+
+    #[Test]
+    public function shouldExecuteMigrationsUnderLock(): void
+    {
+        $calls = [];
+
+        $locator = $this->createStub(MigrationsLocatorInterface::class);
+        $locator->method('locate')->willReturn([$this->createMetadata('1')]);
+
+        $executor = $this->createStub(MigrationExecutorInterface::class);
+
+        $executor->method('execute')
+            ->willReturnCallback(static function (MigrationMetadata $metadata) use (&$calls): MigrationResult {
+                $calls[] = 'execute';
+
+                return new MigrationResult($metadata, MigrationExecutedState::Executed, new \DateTimeImmutable(), 0.0, null);
+            });
+
+        $migrator = new Migrator($locator, $executor, $this->createLock($calls));
+
+        $migrator->migrate(MigrateDirection::Up, null);
+        $migrator->execute(MigrateDirection::Down, '1');
+
+        self::assertSame(['acquire', 'execute', 'release', 'acquire', 'execute', 'release'], $calls);
+    }
+
+    #[Test]
+    public function shouldReleaseLockOnFailure(): void
+    {
+        $calls = [];
+
+        $locator = $this->createStub(MigrationsLocatorInterface::class);
+        $locator->method('locate')->willReturn([$this->createMetadata('1')]);
+
+        $executor = $this->createStub(MigrationExecutorInterface::class);
+        $executor->method('execute')->willThrowException(new \RuntimeException('Migration failed.'));
+
+        $migrator = new Migrator($locator, $executor, $this->createLock($calls));
+
+        try {
+            $migrator->migrate(MigrateDirection::Up, null);
+        } catch (\RuntimeException $error) {
+            self::assertSame('Migration failed.', $error->getMessage());
+        }
+
+        self::assertSame(['acquire', 'release'], $calls);
+    }
+
+    private function createLock(array &$calls): MigrationLockInterface
+    {
+        $lock = $this->createStub(MigrationLockInterface::class);
+
+        $lock->method('acquire')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'acquire';
+        });
+
+        $lock->method('release')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'release';
+        });
+
+        return $lock;
     }
 
     private function createMetadata(string $version): MigrationMetadata

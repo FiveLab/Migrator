@@ -13,6 +13,7 @@ declare(strict_types = 1);
 
 namespace FiveLab\Component\Migrator;
 
+use FiveLab\Component\Migrator\Lock\MigrationLockInterface;
 use FiveLab\Component\Migrator\Locator\FilterVersionsLocator;
 use FiveLab\Component\Migrator\Locator\MigrationsLocatorInterface;
 
@@ -20,7 +21,8 @@ readonly class Migrator implements MigratorInterface
 {
     public function __construct(
         private MigrationsLocatorInterface $locator,
-        private MigrationExecutorInterface $executor
+        private MigrationExecutorInterface $executor,
+        private ?MigrationLockInterface    $lock = null
     ) {
     }
 
@@ -37,13 +39,19 @@ readonly class Migrator implements MigratorInterface
             $locator = new FilterVersionsLocator($locator, $toVersion, $operator);
         }
 
-        $results = [];
+        $this->lock?->acquire();
 
-        foreach ($locator->locate($direction) as $metadata) {
-            $results[] = $this->executor->execute($metadata, $direction);
+        try {
+            $results = [];
+
+            foreach ($locator->locate($direction) as $metadata) {
+                $results[] = $this->executor->execute($metadata, $direction);
+            }
+
+            return $results;
+        } finally {
+            $this->lock?->release();
         }
-
-        return $results;
     }
 
     public function execute(MigrateDirection $direction, string $version): MigrationResult
@@ -60,6 +68,12 @@ readonly class Migrator implements MigratorInterface
             ));
         }
 
-        return $this->executor->execute($versions[0], $direction);
+        $this->lock?->acquire();
+
+        try {
+            return $this->executor->execute($versions[0], $direction);
+        } finally {
+            $this->lock?->release();
+        }
     }
 }

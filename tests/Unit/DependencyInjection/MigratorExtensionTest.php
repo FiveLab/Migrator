@@ -109,6 +109,26 @@ class MigratorExtensionTest extends AbstractExtensionTestCase
         $this->assertContainerBuilderHasServiceDefinitionWithTag('migrations.console.execute_migration', 'console.command');
     }
 
+    #[Test]
+    public function shouldSuccessLoadWithLock(): void
+    {
+        $this->load([
+            'migrations' => [
+                'default' => [
+                    'path'    => __DIR__,
+                    'history' => 'migrator.history',
+                    'lock'    => 'migrator.lock',
+                ],
+            ],
+        ]);
+
+        $this->assertService('migrations.migrator.default', Migrator::class, [
+            new Reference('migrations.migrator.default.locator'),
+            new Reference('migrations.migrator.default.executor'),
+            new Reference('migrator.lock'),
+        ]);
+    }
+
     private function assertService(string $id, string $expectedClass, array $arguments): void
     {
         $this->assertContainerBuilderHasService($id, $expectedClass);

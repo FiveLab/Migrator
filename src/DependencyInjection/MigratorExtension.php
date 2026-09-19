@@ -57,11 +57,17 @@ class MigratorExtension extends Extension
                     new Reference($migratorConfig['factory']),
                 ]);
 
+            $migratorArguments = [
+                new Reference($locatorServiceId),
+                new Reference($executorServiceId),
+            ];
+
+            if ($migratorConfig['lock']) {
+                $migratorArguments[] = new Reference($migratorConfig['lock']);
+            }
+
             $migratorServiceDef = new Definition(Migrator::class)
-                ->setArguments([
-                    new Reference($locatorServiceId),
-                    new Reference($executorServiceId),
-                ]);
+                ->setArguments($migratorArguments);
 
             $container->addDefinitions([
                 $locatorServiceId  => $locatorServiceDef,
