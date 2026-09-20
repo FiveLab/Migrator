@@ -1,7 +1,7 @@
 {
     "name": "fivelab/migrator",
-    "description": "The library for easy implement migration system.",
-    "keywords": ["migration", "migrator"],
+    "description": "Versioned migrations for any storage: SQL via PDO, ClickHouse and more, with independent migration groups and pluggable history storage.",
+    "keywords": ["migration", "migrations", "migrator", "database", "database-migrations", "schema", "pdo", "mysql", "clickhouse", "symfony", "phpmig"],
     "type": "library",
     "license": "MIT",
 
@@ -18,7 +18,8 @@
     ],
 
     "require": {
-        "php": "^8.4"
+        "php": "^8.4",
+        "psr/container": "^1.1 | ^2.0"
     },
 
     "require-dev": {
@@ -30,18 +31,21 @@
         "escapestudios/symfony2-coding-standard": "~3.5",
         "fivelab/ci-rules": "dev-master",
         "matthiasnoback/symfony-dependency-injection-test": "~6.3.0",
-        "symfony/console": "~6.4 | ~7.0",
-        "symfony/dependency-injection": "~6.4 | ~7.0",
-        "symfony/config": "~6.4 | ~7.0",
+        "symfony/console": "~6.4 | ~7.0 | ~8.0",
+        "symfony/dependency-injection": "~6.4 | ~7.0 | ~8.0",
+        "symfony/config": "~6.4 | ~7.0 | ~8.0",
         "smi2/phpclickhouse": "~1.6.0"
     },
 
     "minimum-stability": "RC",
+    "prefer-stable": true,
 
     "suggest": {
         "ext-pdo": "Implement version reader based on PDO (read from specific table).",
+        "smi2/phpclickhouse": "To create migrations for ClickHouse (ClickHouseMigrationFactory).",
         "symfony/console": "Use console commands for migrations.",
-        "symfony/dependency-injection": "Integrate library with Symfony projects."
+        "symfony/dependency-injection": "Integrate library with Symfony projects.",
+        "symfony/config": "Integrate library with Symfony projects (configuration)."
     },
 
     "autoload": {
