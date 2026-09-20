@@ -11,7 +11,7 @@ jobs:
 
         steps:
             -   name: Checkout
-                uses: actions/checkout@v2
+                uses: actions/checkout@v7
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
@@ -36,7 +36,7 @@ jobs:
 
         steps:
             -   name: Checkout
-                uses: actions/checkout@v2
+                uses: actions/checkout@v7
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
@@ -58,11 +58,11 @@ jobs:
 
         strategy:
             matrix:
-                php: [ '8.4' ]
+                php: [ '8.4', '8.5' ]
 
         services:
             mysql:
-                image: mysql:8.0
+                image: mysql:8.4
                 env:
                     MYSQL_ROOT_PASSWORD: root
                     MYSQL_USER: migrator
@@ -70,6 +70,11 @@ jobs:
                     MYSQL_DATABASE: migrations
                 ports:
                     - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping --silent"
+                    --health-interval=5s
+                    --health-timeout=5s
+                    --health-retries=20
 
         env:
             MYSQL_DSN: mysql:host=127.0.0.1;dbname=migrations
@@ -78,7 +83,7 @@ jobs:
 
         steps:
             -   name: Checkout
-                uses: actions/checkout@v2
+                uses: actions/checkout@v7
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
