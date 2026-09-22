@@ -354,6 +354,17 @@ is a better fit.
 
 Migration file names are free in both tools; in Migrator the class name carries the version (`VersionXXX`).
 
+Documentation
+-------------
+
+All documentation is stored in the [`/docs/`](docs) directory:
+
+* [Concepts](docs/concepts.md) — the parts of the runner, versions, groups and what happens during a run.
+* [Extending](docs/extending.md) — own history storage, factory, locator and lock; a recipe for
+  Elasticsearch/OpenSearch indices.
+* [Symfony](docs/symfony.md) — registered services, several groups, the commands without the framework.
+* [Deployment](docs/deployment.md) — CI/CD and Kubernetes, the lock, recovering after a failure, limitations.
+
 Development
 -----------
 
